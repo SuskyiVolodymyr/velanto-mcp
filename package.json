@@ -1,0 +1,41 @@
+{
+  "name": "velanto-mcp",
+  "version": "0.1.0",
+  "description": "Model Context Protocol server for the Velanto API — create, edit, and moderate elimination-quiz packs from an AI assistant using a Personal Access Token.",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "velanto",
+    "ai",
+    "claude"
+  ],
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "velanto-mcp": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "start": "node dist/index.js",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.0",
+    "vitest": "^4.1.10"
+  }
+}

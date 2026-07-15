@@ -1,0 +1,81 @@
+import { z } from "zod";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { ApiClient } from "../api-client.js";
+import { createPackShape, updatePackShape } from "../schemas.js";
+import { handle, queryString } from "./helpers.js";
+
+/**
+ * Pack-authoring tools. Reads need `packs:read`, create/update need
+ * `packs:write`, delete needs `packs:delete` — the token's scopes are enforced
+ * by the API, and a request lacking a scope comes back as an error result.
+ */
+export function registerPackTools(server: McpServer, api: ApiClient): void {
+  server.registerTool(
+    "get_pack",
+    {
+      title: "Get a pack",
+      description:
+        "Fetch a single pack by id, including its groups, rounds, and moderation status. Your own not-yet-approved packs are visible with a packs:read token.",
+      inputSchema: { id: z.string().describe("The pack id.") },
+    },
+    ({ id }) => handle(() => api.get(`/packs/${encodeURIComponent(id)}`)),
+  );
+
+  server.registerTool(
+    "list_my_packs",
+    {
+      title: "List my packs",
+      description:
+        "List packs you authored (all statuses, including pending and rejected). Requires packs:read and profile:read.",
+      inputSchema: {
+        limit: z
+          .number()
+          .int()
+          .positive()
+          .max(50)
+          .optional()
+          .describe("Max packs to return (default 20)."),
+      },
+    },
+    ({ limit }) =>
+      handle(async () => {
+        const me = await api.get<{ id: string }>("/users/me");
+        const qs = queryString({ authorId: me.id, limit: limit ?? 20 });
+        return api.get(`/packs${qs}`);
+      }),
+  );
+
+  server.registerTool(
+    "create_pack",
+    {
+      title: "Create a pack",
+      description:
+        "Create a new elimination-quiz pack. It enters moderation before becoming public (unless your account is staff/trusted). Requires packs:write.",
+      inputSchema: createPackShape,
+    },
+    (input) => handle(() => api.post("/packs", input)),
+  );
+
+  server.registerTool(
+    "update_pack",
+    {
+      title: "Update a pack",
+      description:
+        "Update one of your own packs. Editing re-enters moderation. Provide the pack id plus the fields to change. Requires packs:write.",
+      inputSchema: updatePackShape,
+    },
+    ({ id, ...patch }) =>
+      handle(() => api.patch(`/packs/${encodeURIComponent(id)}`, patch)),
+  );
+
+  server.registerTool(
+    "delete_pack",
+    {
+      title: "Delete a pack",
+      description:
+        "Permanently delete one of your own packs. This cannot be undone. Requires packs:delete.",
+      inputSchema: { id: z.string().describe("The pack id to delete.") },
+    },
+    ({ id }) => handle(() => api.delete(`/packs/${encodeURIComponent(id)}`)),
+  );
+}
