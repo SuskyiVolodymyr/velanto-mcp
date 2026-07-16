@@ -10,6 +10,14 @@
     "claude"
   ],
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SuskyiVolodymyr/velanto-mcp.git"
+  },
+  "homepage": "https://github.com/SuskyiVolodymyr/velanto-mcp#readme",
+  "bugs": {
+    "url": "https://github.com/SuskyiVolodymyr/velanto-mcp/issues"
+  },
   "type": "module",
   "bin": {
     "velanto-mcp": "dist/index.js"
