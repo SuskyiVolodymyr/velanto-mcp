@@ -6,9 +6,12 @@ import { z } from "zod";
  * server relays any rejection, but keeping these faithful means the AI builds
  * valid packs first time.
  *
- * Coverage: the "groups + rounds" elimination formats — `save_one`,
- * `sacrifice_one`, `rank_blind`. The category formats (`nxn`, `1v1`) are not
- * modelled by this tool version.
+ * All five formats share one shape — pools (`groups`) plus `rounds` of `slots`.
+ * They differ only in the per-round slot rules, described on `format` below:
+ * elimination formats draw a single slot per round, versus formats pit two
+ * pools against each other. Those rules can't be expressed in the raw shape MCP
+ * registers tools with, so they live in the field descriptions, and the backend
+ * enforces them for real (see its `create-pack.dto.ts`).
  */
 
 /** Category tags a pack can carry, mirrored from the backend PACK_TAGS. */
@@ -70,8 +73,27 @@ export const slotSchema = z.object({
 export const roundSchema = z.object({
   id: z.string().min(1),
   name: z.string().max(100).optional().describe("Optional round label."),
-  slots: z.array(slotSchema).min(1),
+  slots: z
+    .array(slotSchema)
+    .min(1)
+    .describe(
+      "Elimination formats (save_one, sacrifice_one, rank_blind): exactly 1 " +
+        "slot. Versus formats (nxn, 1v1): exactly 2 slots — one per side.",
+    ),
 });
+
+/** The format enum, shared by create and update so they can't drift apart. */
+const formatSchema = z
+  .enum(["save_one", "sacrifice_one", "rank_blind", "nxn", "1v1"])
+  .describe(
+    "How the pack plays, which fixes the shape of every round. " +
+      "save_one / sacrifice_one / rank_blind: each round has exactly 1 slot " +
+      "drawing 2-8 items. " +
+      "nxn / 1v1: each round has exactly 2 slots, one per side, and both must " +
+      "use mode 'random'. The two slots must reference two DIFFERENT groups, " +
+      "and every round must use the same two groups in the same order. " +
+      "nxn draws 1-8 items per side; 1v1 must draw exactly 1 per side.",
+  );
 
 /** The create-pack input as a Zod raw shape (for tool registration). */
 export const createPackShape = {
@@ -81,9 +103,7 @@ export const createPackShape = {
     .string()
     .min(1)
     .describe("A cover accent tone, e.g. 'cyan', 'violet', 'green', 'amber'."),
-  format: z
-    .enum(["save_one", "sacrifice_one", "rank_blind"])
-    .describe("The elimination format."),
+  format: formatSchema,
   language: z
     .string()
     .optional()
@@ -99,7 +119,7 @@ export const updatePackShape = {
   title: z.string().min(1).max(100).optional(),
   description: z.string().min(1).max(500).optional(),
   coverTone: z.string().min(1).optional(),
-  format: z.enum(["save_one", "sacrifice_one", "rank_blind"]).optional(),
+  format: formatSchema.optional(),
   language: z.string().optional(),
   tags: z.array(z.enum(PACK_TAGS)).max(10).optional(),
   groups: z.array(groupSchema).optional(),
