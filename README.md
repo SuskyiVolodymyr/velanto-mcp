@@ -78,9 +78,20 @@ has the necessary role. Grant the least you need:
 - `list_reports` — user-filed content reports.
 - `resolve_report` — mark a report reviewed or closed.
 
-> Pack authoring currently supports the elimination formats `save_one`,
-> `sacrifice_one`, and `rank_blind`. The API validates every request and returns
-> a clear error the assistant can act on.
+All five formats are supported. Every pack is pools (`groups`) plus `rounds` of
+`slots`; the format fixes each round's slot shape:
+
+| Format                                  | Round shape                                                                                        |
+| --------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `save_one`, `sacrifice_one`, `rank_blind` | Exactly 1 slot, drawing 2–8 items.                                                                 |
+| `nxn`                                   | Exactly 2 slots (one per side), both `random`, 1–8 items per side.                                  |
+| `1v1`                                   | Exactly 2 slots, both `random`, exactly 1 item per side.                                            |
+
+Versus rounds (`nxn`, `1v1`) must pit two **different** groups against each
+other, and every round must use the same two groups in the same order.
+
+> The API validates every request and returns a clear error the assistant can
+> act on.
 
 ## Development
 
