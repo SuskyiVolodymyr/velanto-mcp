@@ -59,4 +59,45 @@ describe("ApiClient", () => {
     const api = new ApiClient(cfg, fetchMock as unknown as typeof fetch);
     expect(await api.delete("/packs/p1")).toBeNull();
   });
+
+  it("posts multipart form data with the bearer token and no explicit content-type", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(res(201, { key: "media/item/x.webp" }));
+    const api = new ApiClient(cfg, fetchMock as unknown as typeof fetch);
+
+    const form = new FormData();
+    form.set("kind", "item");
+    form.set(
+      "file",
+      new Blob([Uint8Array.from([1, 2, 3])], { type: "image/png" }),
+      "x.png",
+    );
+
+    const out = await api.postForm("/media", form);
+
+    expect(out).toEqual({ key: "media/item/x.webp" });
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe("https://api.test/media");
+    expect(init.method).toBe("POST");
+    const headers = init.headers as Record<string, string>;
+    expect(headers.Authorization).toBe("Bearer vlt_pat_a_b");
+    // Must NOT set Content-Type: fetch derives the multipart boundary itself,
+    // and a hand-set value would omit it and break the upload.
+    expect(headers["Content-Type"]).toBeUndefined();
+    expect(init.body).toBe(form);
+  });
+
+  it("surfaces a non-2xx multipart response as a VelantoApiError", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(res(403, { message: "missing scope: packs:write" }));
+    const api = new ApiClient(cfg, fetchMock as unknown as typeof fetch);
+
+    const err = await api
+      .postForm("/media", new FormData())
+      .catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(VelantoApiError);
+    expect((err as VelantoApiError).status).toBe(403);
+  });
 });

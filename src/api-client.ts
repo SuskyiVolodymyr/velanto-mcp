@@ -60,21 +60,36 @@ export class ApiClient {
     return this.request<T>("DELETE", path);
   }
 
-  private async request<T>(
-    method: Method,
-    path: string,
-    body?: unknown,
-  ): Promise<T> {
+  /**
+   * POST a multipart/form-data body (a `FormData`). Unlike {@link post}, this
+   * sets NO Content-Type header — `fetch` derives `multipart/form-data` plus the
+   * boundary from the FormData itself, and setting it by hand would drop the
+   * boundary and corrupt the upload. Used to stream an image to POST /media.
+   */
+  postForm<T>(path: string, form: FormData): Promise<T> {
+    return this.send<T>(path, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${this.config.token}` },
+      body: form,
+    });
+  }
+
+  private request<T>(method: Method, path: string, body?: unknown): Promise<T> {
     const headers: Record<string, string> = {
       Authorization: `Bearer ${this.config.token}`,
     };
     if (body !== undefined) headers["Content-Type"] = "application/json";
 
-    const res = await this.fetchImpl(`${this.config.apiUrl}${path}`, {
+    return this.send<T>(path, {
       method,
       headers,
       body: body === undefined ? undefined : JSON.stringify(body),
     });
+  }
+
+  /** Fire one request and turn the response into T (or throw VelantoApiError). */
+  private async send<T>(path: string, init: RequestInit): Promise<T> {
+    const res = await this.fetchImpl(`${this.config.apiUrl}${path}`, init);
 
     const text = await res.text();
     const data: unknown = text ? safeJsonParse(text) : null;

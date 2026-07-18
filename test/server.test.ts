@@ -1,4 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
+import { mkdtemp, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { createServer } from "../src/server.js";
@@ -60,6 +63,7 @@ describe("velanto-mcp server", () => {
         "reject_pack",
         "resolve_report",
         "update_pack",
+        "upload_image",
       ].sort(),
     );
   });
@@ -149,5 +153,45 @@ describe("velanto-mcp server", () => {
     expect((fetchMock.mock.calls[0] as string[])[0]).toBe(
       "https://api.test/reports/r1/close",
     );
+  });
+
+  it("upload_image reads the file and posts it as multipart to /media", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "velanto-mcp-srv-"));
+    const path = join(dir, "cover.png");
+    await writeFile(path, Buffer.from([0x89, 0x50, 0x4e, 0x47]));
+
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(res(201, { key: "media/cover/abc.webp" }));
+    const client = await harness(fetchMock);
+
+    const out = await client.callTool({
+      name: "upload_image",
+      arguments: { path, kind: "cover" },
+    });
+
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe("https://api.test/media");
+    expect(init.method).toBe("POST");
+    // A FormData body carrying the kind + the file part.
+    const form = init.body as FormData;
+    expect(form).toBeInstanceOf(FormData);
+    expect(form.get("kind")).toBe("cover");
+    expect(form.get("file")).toBeInstanceOf(Blob);
+    // The returned key is surfaced for use in a pack.
+    expect(textOf(out)).toContain("media/cover/abc.webp");
+    expect((out as { isError?: boolean }).isError).toBeFalsy();
+  });
+
+  it("upload_image returns a readable error when the file is missing", async () => {
+    const client = await harness(vi.fn());
+
+    const out = await client.callTool({
+      name: "upload_image",
+      arguments: { path: "/no/such/image.png" },
+    });
+
+    expect((out as { isError?: boolean }).isError).toBe(true);
+    expect(textOf(out)).toMatch(/not found|unreadable/i);
   });
 });
