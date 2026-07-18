@@ -105,6 +105,13 @@ export const createPackShape = {
     .string()
     .min(1)
     .describe("A cover accent tone, e.g. 'cyan', 'violet', 'green', 'amber'."),
+  coverImageKey: z
+    .string()
+    .min(1)
+    .optional()
+    .describe(
+      "Storage key of a custom cover image, from upload_image with kind 'cover'. Omit to use the coverTone gradient.",
+    ),
   format: formatSchema,
   language: z
     .string()
@@ -121,6 +128,13 @@ export const updatePackShape = {
   title: z.string().min(1).max(100).optional(),
   description: z.string().min(1).max(500).optional(),
   coverTone: z.string().min(1).optional(),
+  coverImageKey: z
+    .string()
+    .min(1)
+    .optional()
+    .describe(
+      "Storage key of a custom cover image, from upload_image with kind 'cover'. Omit to keep the coverTone gradient.",
+    ),
   format: formatSchema.optional(),
   language: z.string().optional(),
   tags: z.array(z.enum(PACK_TAGS)).max(10).optional(),

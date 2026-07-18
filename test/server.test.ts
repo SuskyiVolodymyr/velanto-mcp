@@ -108,6 +108,23 @@ describe("velanto-mcp server", () => {
     expect(JSON.parse(init.body as string).title).toBe("Best Movies");
   });
 
+  it("create_pack forwards a coverImageKey (a custom cover from upload_image)", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(res(201, { id: "p10" }));
+    const client = await harness(fetchMock);
+
+    await client.callTool({
+      name: "create_pack",
+      arguments: { ...VALID_PACK, coverImageKey: "media/cover/abc.webp" },
+    });
+
+    // The zod shape must keep coverImageKey — otherwise a cover uploaded via
+    // upload_image is silently dropped and can never attach to a pack.
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(JSON.parse(init.body as string).coverImageKey).toBe(
+      "media/cover/abc.webp",
+    );
+  });
+
   it("surfaces an API error as an isError result the model can read", async () => {
     const fetchMock = vi
       .fn()

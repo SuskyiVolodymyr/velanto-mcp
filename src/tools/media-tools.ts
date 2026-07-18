@@ -15,7 +15,7 @@ export function registerMediaTools(server: McpServer, api: ApiClient): void {
     {
       title: "Upload an image",
       description:
-        "Upload a local image file (.jpg, .png, or .webp, max 1MB) and get back a media key. Use that key as an image item's `value` (or a pack's coverImageKey) when you create or update a pack — it's how a local picture becomes part of a pack. Requires packs:write.",
+        "Upload a local image file (.jpg, .jpeg, .png, or .webp, max 1MB) and get back a media key. Use that key as an image item's `value`, or — for a kind 'cover' upload — as a pack's coverImageKey, when you create or update a pack. It's how a local picture becomes part of a pack. Requires packs:write.",
       inputSchema: {
         path: z
           .string()

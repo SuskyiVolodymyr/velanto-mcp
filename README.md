@@ -70,8 +70,9 @@ has the necessary role. Grant the least you need:
 - `create_pack` — create a new pack (enters moderation before going public).
 - `update_pack` — edit one of your packs (re-enters moderation).
 - `delete_pack` — permanently delete one of your packs.
-- `upload_image` — upload a local image file (.jpg/.png/.webp, ≤1MB) and get a
-  media key to use as an image item's `value` or a pack's cover.
+- `upload_image` — upload a local image file (.jpg/.jpeg/.png/.webp, ≤1MB) and
+  get a media key to use as an image item's `value`, or (with `kind: cover`) a
+  pack's `coverImageKey`.
 
 **Moderation** (staff accounts, with the `moderation` scope)
 
