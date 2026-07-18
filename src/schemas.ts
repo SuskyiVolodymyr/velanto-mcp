@@ -90,8 +90,10 @@ const formatSchema = z
       "save_one / sacrifice_one / rank_blind: each round has exactly 1 slot " +
       "drawing 2-8 items. " +
       "nxn / 1v1: each round has exactly 2 slots, one per side, and both must " +
-      "use mode 'random'. The two slots must reference two DIFFERENT groups, " +
-      "and every round must use the same two groups in the same order. " +
+      "use mode 'random'. The two slots must reference two DIFFERENT groups. " +
+      "Each round is its own independent matchup — different rounds may pit " +
+      "different group pairs, in any order (e.g. round 1 boys vs girls, round " +
+      "2 heroes vs villains). " +
       "nxn draws 1-8 items per side; 1v1 must draw exactly 1 per side.",
   );
 
