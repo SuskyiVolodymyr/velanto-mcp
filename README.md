@@ -56,7 +56,7 @@ has the necessary role. Grant the least you need:
 | Scope          | Enables                                              |
 | -------------- | --------------------------------------------------- |
 | `packs:read`   | `get_pack`, `list_my_packs`                         |
-| `packs:write`  | `create_pack`, `update_pack`                        |
+| `packs:write`  | `create_pack`, `update_pack`, `upload_image`        |
 | `packs:delete` | `delete_pack`                                        |
 | `moderation`   | the moderation tools (also requires a staff account) |
 | `profile:read` | `list_my_packs` (to resolve your account)           |
@@ -70,6 +70,9 @@ has the necessary role. Grant the least you need:
 - `create_pack` — create a new pack (enters moderation before going public).
 - `update_pack` — edit one of your packs (re-enters moderation).
 - `delete_pack` — permanently delete one of your packs.
+- `upload_image` — upload a local image file (.jpg/.jpeg/.png/.webp, ≤1MB) and
+  get a media key to use as an image item's `value`, or (with `kind: cover`) a
+  pack's `coverImageKey`.
 
 **Moderation** (staff accounts, with the `moderation` scope)
 

@@ -3,6 +3,7 @@ import type { Config } from "./config.js";
 import { ApiClient } from "./api-client.js";
 import { registerPackTools } from "./tools/pack-tools.js";
 import { registerModerationTools } from "./tools/moderation-tools.js";
+import { registerMediaTools } from "./tools/media-tools.js";
 
 export const SERVER_NAME = "velanto-mcp";
 export const SERVER_VERSION = "0.1.0";
@@ -20,5 +21,6 @@ export function createServer(config: Config, fetchImpl?: typeof fetch): McpServe
   });
   registerPackTools(server, api);
   registerModerationTools(server, api);
+  registerMediaTools(server, api);
   return server;
 }
