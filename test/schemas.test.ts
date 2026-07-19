@@ -39,6 +39,20 @@ const VERSUS_PACK = {
   ],
 };
 
+describe("createPackShape.draft", () => {
+  it("accepts an optional draft flag", () => {
+    expect(createPack.parse({ ...VERSUS_PACK, draft: true }).draft).toBe(true);
+  });
+
+  it("is optional (a pack with no draft flag is valid)", () => {
+    expect(createPack.parse(VERSUS_PACK).draft).toBeUndefined();
+  });
+
+  it("is also accepted on update", () => {
+    expect(updatePack.parse({ id: "p1", draft: false }).draft).toBe(false);
+  });
+});
+
 describe("createPackShape.format", () => {
   it("accepts every format the backend supports", () => {
     for (const format of [

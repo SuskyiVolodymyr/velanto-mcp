@@ -49,6 +49,14 @@ export const PACK_TAGS = [
   "Memes",
 ] as const;
 
+/** A pack's moderation status, mirrored from the backend PACK_MODERATION_STATUSES. */
+export const PACK_MODERATION_STATUSES = [
+  "draft",
+  "pending",
+  "approved",
+  "rejected",
+] as const;
+
 // An item is one of three types; a youtube item's value must be a video URL.
 export const itemSchema = z.discriminatedUnion("type", [
   z.object({
@@ -149,6 +157,12 @@ export const createPackShape = {
   tags: z.array(z.enum(PACK_TAGS)).max(10).describe("Category tags."),
   groups: z.array(groupSchema).min(1),
   rounds: z.array(roundSchema).min(1),
+  draft: z
+    .boolean()
+    .optional()
+    .describe(
+      "Save as a private draft instead of publishing. A draft skips moderation and is visible only to you; omit or pass false to publish (which enters moderation unless you're staff/trusted).",
+    ),
 } as const;
 
 /** Update-pack input: an id plus any subset of the create fields. */
@@ -169,4 +183,10 @@ export const updatePackShape = {
   tags: z.array(z.enum(PACK_TAGS)).max(10).optional(),
   groups: z.array(groupSchema).optional(),
   rounds: z.array(roundSchema).optional(),
+  draft: z
+    .boolean()
+    .optional()
+    .describe(
+      "Set true to unpublish the pack back to a private draft, or false to (re)publish it (re-entering moderation). Omit to leave its published state unchanged.",
+    ),
 } as const;

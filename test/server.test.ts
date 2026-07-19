@@ -96,6 +96,21 @@ describe("velanto-mcp server", () => {
     expect((fetchMock.mock.calls[1] as string[])[0]).toContain("authorId=u1");
   });
 
+  it("list_my_packs forwards a status filter when given", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(res(200, { id: "u1" }))
+      .mockResolvedValueOnce(res(200, { items: [] }));
+    const client = await harness(fetchMock);
+
+    await client.callTool({
+      name: "list_my_packs",
+      arguments: { status: "draft" },
+    });
+
+    expect((fetchMock.mock.calls[1] as string[])[0]).toContain("status=draft");
+  });
+
   it("create_pack posts the pack body to /packs", async () => {
     const fetchMock = vi.fn().mockResolvedValue(res(201, { id: "p9" }));
     const client = await harness(fetchMock);
