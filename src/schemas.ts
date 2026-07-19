@@ -16,11 +16,37 @@ import { z } from "zod";
 
 /** Category tags a pack can carry, mirrored from the backend PACK_TAGS. */
 export const PACK_TAGS = [
-  "Anime", "Movies", "Music", "Sports", "Football", "Basketball", "Wrestling",
-  "Food", "Gaming", "Board Games", "Comics", "Sci-Fi", "Fantasy", "Horror",
-  "TV", "Cartoons", "Books", "Fashion", "Cars", "History", "Mythology",
-  "Nature", "Animals", "Technology", "Science", "Space", "Art", "Travel",
-  "Celebrities", "K-pop", "Memes",
+  "Anime",
+  "Movies",
+  "Music",
+  "Sports",
+  "Football",
+  "Basketball",
+  "Wrestling",
+  "Food",
+  "Gaming",
+  "Board Games",
+  "Comics",
+  "Sci-Fi",
+  "Fantasy",
+  "Horror",
+  "TV",
+  "Cartoons",
+  "Books",
+  "Fashion",
+  "Cars",
+  "History",
+  "Mythology",
+  "Nature",
+  "Animals",
+  "Technology",
+  "Science",
+  "Space",
+  "Art",
+  "Travel",
+  "Celebrities",
+  "K-pop",
+  "Memes",
 ] as const;
 
 // An item is one of three types; a youtube item's value must be a video URL.
@@ -90,10 +116,13 @@ const formatSchema = z
       "save_one / sacrifice_one / rank_blind: each round has exactly 1 slot " +
       "drawing 2-8 items. " +
       "nxn / 1v1: each round has exactly 2 slots, one per side, and both must " +
-      "use mode 'random'. The two slots must reference two DIFFERENT groups. " +
-      "Each round is its own independent matchup — different rounds may pit " +
-      "different group pairs, in any order (e.g. round 1 boys vs girls, round " +
-      "2 heroes vs villains). " +
+      "use mode 'random'. The two slots may reference two DIFFERENT groups " +
+      "(a classic A-vs-B matchup) OR the SAME group (a single-pool matchup — " +
+      "each side draws different items from the one pool, and items never " +
+      "repeat, so the pool size caps how many rounds it can feed: 12 items at " +
+      "3 per side allow at most two rounds). Each round is its own independent " +
+      "matchup — different rounds may pit different pairs, in any order (e.g. " +
+      "round 1 boys vs girls, round 2 heroes vs villains). " +
       "nxn draws 1-8 items per side; 1v1 must draw exactly 1 per side.",
   );
 

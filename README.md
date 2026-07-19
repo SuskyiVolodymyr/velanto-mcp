@@ -43,9 +43,9 @@ the best sci-fi movies."
 
 ## Configuration
 
-| Variable            | Required | Default                       | Description                                   |
-| ------------------- | -------- | ----------------------------- | --------------------------------------------- |
-| `VELANTO_API_TOKEN` | yes      | —                             | Your Personal Access Token (`vlt_pat_…`).     |
+| Variable            | Required | Default                       | Description                                               |
+| ------------------- | -------- | ----------------------------- | --------------------------------------------------------- |
+| `VELANTO_API_TOKEN` | yes      | —                             | Your Personal Access Token (`vlt_pat_…`).                 |
 | `VELANTO_API_URL`   | no       | `https://api.playvelanto.com` | API base URL (use `http://localhost:3001` for local dev). |
 
 ## Scopes
@@ -54,12 +54,12 @@ A tool only works if your token carries the matching scope **and** your account
 has the necessary role. Grant the least you need:
 
 | Scope          | Enables                                              |
-| -------------- | --------------------------------------------------- |
-| `packs:read`   | `get_pack`, `list_my_packs`                         |
-| `packs:write`  | `create_pack`, `update_pack`, `upload_image`        |
+| -------------- | ---------------------------------------------------- |
+| `packs:read`   | `get_pack`, `list_my_packs`                          |
+| `packs:write`  | `create_pack`, `update_pack`, `upload_image`         |
 | `packs:delete` | `delete_pack`                                        |
 | `moderation`   | the moderation tools (also requires a staff account) |
-| `profile:read` | `list_my_packs` (to resolve your account)           |
+| `profile:read` | `list_my_packs` (to resolve your account)            |
 
 ## Tools
 
@@ -84,14 +84,17 @@ has the necessary role. Grant the least you need:
 All five formats are supported. Every pack is pools (`groups`) plus `rounds` of
 `slots`; the format fixes each round's slot shape:
 
-| Format                                  | Round shape                                                                                        |
-| --------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `save_one`, `sacrifice_one`, `rank_blind` | Exactly 1 slot, drawing 2–8 items.                                                                 |
-| `nxn`                                   | Exactly 2 slots (one per side), both `random`, 1–8 items per side.                                  |
-| `1v1`                                   | Exactly 2 slots, both `random`, exactly 1 item per side.                                            |
+| Format                                    | Round shape                                                        |
+| ----------------------------------------- | ------------------------------------------------------------------ |
+| `save_one`, `sacrifice_one`, `rank_blind` | Exactly 1 slot, drawing 2–8 items.                                 |
+| `nxn`                                     | Exactly 2 slots (one per side), both `random`, 1–8 items per side. |
+| `1v1`                                     | Exactly 2 slots, both `random`, exactly 1 item per side.           |
 
-Versus rounds (`nxn`, `1v1`) must pit two **different** groups against each
-other, and every round must use the same two groups in the same order.
+Each versus round (`nxn`, `1v1`) is its own independent matchup: its two slots
+may reference two **different** groups (a classic A-vs-B matchup) or the **same**
+group (a single-pool matchup, where each side draws different items from the one
+pool and items never repeat, so the pool size caps how many rounds it can feed).
+Different rounds may use different pairs, in any order.
 
 > The API validates every request and returns a clear error the assistant can
 > act on.
