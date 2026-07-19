@@ -1,7 +1,11 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { ApiClient } from "../api-client.js";
-import { createPackShape, updatePackShape } from "../schemas.js";
+import {
+  createPackShape,
+  updatePackShape,
+  PACK_MODERATION_STATUSES,
+} from "../schemas.js";
 import { handle, queryString } from "./helpers.js";
 
 /**
@@ -26,8 +30,14 @@ export function registerPackTools(server: McpServer, api: ApiClient): void {
     {
       title: "List my packs",
       description:
-        "List packs you authored (all statuses, including pending and rejected). Requires packs:read and profile:read.",
+        "List packs you authored (all statuses, including drafts, pending and rejected). Optionally filter to one status. Requires packs:read and profile:read.",
       inputSchema: {
+        status: z
+          .enum(PACK_MODERATION_STATUSES)
+          .optional()
+          .describe(
+            "Only return packs with this moderation status (draft, pending, approved, rejected). Omit for all statuses.",
+          ),
         limit: z
           .number()
           .int()
@@ -37,10 +47,14 @@ export function registerPackTools(server: McpServer, api: ApiClient): void {
           .describe("Max packs to return (default 20)."),
       },
     },
-    ({ limit }) =>
+    ({ status, limit }) =>
       handle(async () => {
         const me = await api.get<{ id: string }>("/users/me");
-        const qs = queryString({ authorId: me.id, limit: limit ?? 20 });
+        const qs = queryString({
+          authorId: me.id,
+          status,
+          limit: limit ?? 20,
+        });
         return api.get(`/packs${qs}`);
       }),
   );
@@ -50,7 +64,7 @@ export function registerPackTools(server: McpServer, api: ApiClient): void {
     {
       title: "Create a pack",
       description:
-        "Create a new elimination-quiz pack. It enters moderation before becoming public (unless your account is staff/trusted). Requires packs:write.",
+        "Create a new elimination-quiz pack. It enters moderation before becoming public (unless your account is staff/trusted), or pass draft:true to save it privately without submitting for review. Requires packs:write.",
       inputSchema: createPackShape,
     },
     (input) => handle(() => api.post("/packs", input)),
@@ -61,7 +75,7 @@ export function registerPackTools(server: McpServer, api: ApiClient): void {
     {
       title: "Update a pack",
       description:
-        "Update one of your own packs. Editing re-enters moderation. Provide the pack id plus the fields to change. Requires packs:write.",
+        "Update one of your own packs. Editing re-enters moderation; pass draft:true to unpublish it back to a private draft, or draft:false to (re)publish. Provide the pack id plus the fields to change. Requires packs:write.",
       inputSchema: updatePackShape,
     },
     ({ id, ...patch }) =>

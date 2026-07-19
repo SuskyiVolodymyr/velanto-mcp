@@ -66,9 +66,12 @@ has the necessary role. Grant the least you need:
 **Pack authoring**
 
 - `get_pack` — fetch a pack by id (including your own pending packs).
-- `list_my_packs` — list the packs you authored, all statuses.
-- `create_pack` — create a new pack (enters moderation before going public).
-- `update_pack` — edit one of your packs (re-enters moderation).
+- `list_my_packs` — list the packs you authored, all statuses (optionally
+  filtered to one: draft, pending, approved, rejected).
+- `create_pack` — create a new pack (enters moderation before going public, or
+  `draft: true` to save it privately without submitting for review).
+- `update_pack` — edit one of your packs (re-enters moderation; `draft: true`
+  unpublishes it back to a private draft, `draft: false` (re)publishes).
 - `delete_pack` — permanently delete one of your packs.
 - `upload_image` — upload a local image file (.jpg/.jpeg/.png/.webp, ≤1MB) and
   get a media key to use as an image item's `value`, or (with `kind: cover`) a
