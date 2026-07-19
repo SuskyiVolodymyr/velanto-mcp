@@ -75,7 +75,7 @@ export function registerPackTools(server: McpServer, api: ApiClient): void {
     {
       title: "Update a pack",
       description:
-        "Update one of your own packs. Editing re-enters moderation; pass draft:true to unpublish it back to a private draft, or draft:false to (re)publish. Provide the pack id plus the fields to change. Requires packs:write.",
+        "Replace one of your own packs. Send the pack id plus the COMPLETE pack body — title, description, coverTone, format, tags and rounds — exactly as create_pack takes it, not just the fields you want to change: this replaces the pack, and omitting a field is rejected rather than leaving it untouched. Editing re-enters moderation; pass draft:true to unpublish it back to a private draft, or draft:false to (re)publish. Requires packs:write.",
       inputSchema: updatePackShape,
     },
     ({ id, ...patch }) =>
