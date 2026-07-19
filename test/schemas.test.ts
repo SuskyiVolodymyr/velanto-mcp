@@ -81,6 +81,35 @@ describe("versus packs", () => {
     });
     expect(result.success).toBe(true);
   });
+
+  // A single-pool matchup (both slots reference ONE group) is a valid shape —
+  // the MCP schema is structural, so it forwards this to the backend, which
+  // hands each side disjoint items and caps rounds by the pool size.
+  it("accepts a single-pool round (both slots the same group)", () => {
+    const result = createPack.safeParse({
+      ...VERSUS_PACK,
+      groups: [
+        {
+          id: "g1",
+          name: "Heroes",
+          items: [
+            { id: "i1", type: "text", title: "Iron Man", value: "2008" },
+            { id: "i2", type: "text", title: "Batman", value: "1989" },
+          ],
+        },
+      ],
+      rounds: [
+        {
+          id: "r1",
+          slots: [
+            { groupId: "g1", mode: "random", count: 1 },
+            { groupId: "g1", mode: "random", count: 1 },
+          ],
+        },
+      ],
+    });
+    expect(result.success).toBe(true);
+  });
 });
 
 describe("updatePackShape.format", () => {
