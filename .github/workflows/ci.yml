@@ -1,0 +1,69 @@
+name: CI
+
+# Two jobs, one file: `verify` guards every pull request, and `publish` runs
+# only on main and only when package.json names a version npm doesn't have yet.
+# Before this the repo had no workflows at all — nothing ran on a PR, and every
+# release was published by hand from a laptop.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+
+  publish:
+    needs: verify
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # Lets npm attach a provenance attestation, tying the published tarball to
+      # this workflow run and commit. Requires a public repo, which this is.
+      id-token: write
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          registry-url: https://registry.npmjs.org
+      - run: npm ci
+
+      # Publishing a version that already exists is a hard error, so every
+      # ordinary commit to main would fail the workflow. Ask the registry first
+      # and skip quietly instead — a release is then just a version bump.
+      - id: check
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          if npm view "velanto-mcp@$VERSION" version >/dev/null 2>&1; then
+            echo "published=true" >> "$GITHUB_OUTPUT"
+            echo "velanto-mcp@$VERSION is already on npm — nothing to do."
+          else
+            echo "published=false" >> "$GITHUB_OUTPUT"
+            echo "velanto-mcp@$VERSION is new — publishing."
+          fi
+
+      - if: steps.check.outputs.published == 'false'
+        run: npm publish --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # A tag per published version, so the registry and the git history agree
+      # on what shipped. Only after a successful publish.
+      - if: steps.check.outputs.published == 'false'
+        run: |
+          git tag "v${{ steps.check.outputs.version }}"
+          git push origin "v${{ steps.check.outputs.version }}"
