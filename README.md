@@ -84,14 +84,15 @@ has the necessary role. Grant the least you need:
 - `list_reports` — user-filed content reports.
 - `resolve_report` — mark a report reviewed or closed.
 
-All five formats are supported. Every pack is pools (`groups`) plus `rounds` of
+All six formats are supported. Every pack is pools (`groups`) plus `rounds` of
 `slots`; the format fixes each round's slot shape:
 
-| Format                                    | Round shape                                                        |
-| ----------------------------------------- | ------------------------------------------------------------------ |
-| `save_one`, `sacrifice_one`, `rank_blind` | Exactly 1 slot, drawing 2–8 items.                                 |
-| `nxn`                                     | Exactly 2 slots (one per side), both `random`, 1–8 items per side. |
-| `1v1`                                     | Exactly 2 slots, both `random`, exactly 1 item per side.           |
+| Format                                    | Round shape                                                                                               |
+| ----------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `save_one`, `sacrifice_one`, `rank_blind` | Exactly 1 slot, drawing 2–8 items.                                                                        |
+| `save_one_friends`                        | Exactly 1 slot, `random`, no `count` — the room draws players+1 items; each pool needs 5 items per round. |
+| `nxn`                                     | Exactly 2 slots (one per side), both `random`, 1–8 items per side.                                        |
+| `1v1`                                     | Exactly 2 slots, both `random`, exactly 1 item per side.                                                  |
 
 Each versus round (`nxn`, `1v1`) is its own independent matchup: its two slots
 may reference two **different** groups (a classic A-vs-B matchup) or the **same**
