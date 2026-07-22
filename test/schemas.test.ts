@@ -140,3 +140,64 @@ describe("updatePackShape.format", () => {
     expect(updatePack.safeParse({ id: "p1" }).success).toBe(true);
   });
 });
+
+/**
+ * velanto-backend#250: a slot may name its pool (`groupId`) or ask for one at
+ * play time (`groupMode: "random"`). The API validates authoritatively — these
+ * only check the MCP can express both shapes, since a schema that rejects a
+ * valid pack stops an agent building one at all.
+ */
+describe("slot pool mode", () => {
+  const withSlots = (slots: unknown[]) => ({
+    ...VERSUS_PACK,
+    rounds: [{ id: "r1", slots }],
+  });
+
+  it("accepts a slot that names no pool when groupMode is random", () => {
+    const result = createPack.safeParse(
+      withSlots([
+        { groupMode: "random", mode: "random", count: 1 },
+        { groupMode: "random", mode: "random", count: 1 },
+      ]),
+    );
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts one random side against one named pool", () => {
+    const result = createPack.safeParse(
+      withSlots([
+        { groupId: "g1", mode: "random", count: 1 },
+        { groupMode: "random", mode: "random", count: 1 },
+      ]),
+    );
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects a slot that neither names a pool nor asks for one", () => {
+    const result = createPack.safeParse(
+      withSlots([{ mode: "random", count: 1 }]),
+    );
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects a random-pool slot that also names a pool", () => {
+    const result = createPack.safeParse(
+      withSlots([
+        { groupMode: "random", groupId: "g1", mode: "random", count: 1 },
+      ]),
+    );
+    expect(result.success).toBe(false);
+  });
+
+  // An item id only means something inside a known pool.
+  it("rejects a random-pool slot that pins items", () => {
+    const result = createPack.safeParse(
+      withSlots([{ groupMode: "random", mode: "manual", itemIds: ["i1"] }]),
+    );
+    expect(result.success).toBe(false);
+  });
+
+  it("still accepts the historic shape, with groupMode absent", () => {
+    expect(createPack.safeParse(VERSUS_PACK).success).toBe(true);
+  });
+});
