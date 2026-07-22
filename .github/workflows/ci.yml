@@ -28,9 +28,17 @@ jobs:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      # Lets npm attach a provenance attestation, tying the published tarball to
-      # this workflow run and commit. Requires a public repo, which this is.
+      # write, not read: the last step pushes a vX.Y.Z tag.
+      contents: write
+      # The whole authentication story. npm's trusted publishing exchanges this
+      # short-lived OIDC token for publish rights, so there is no npm token on
+      # the repo to leak, rotate or expire — and npm is restricting the
+      # 2FA-bypassing tokens that were the alternative (account changes Aug
+      # 2026, direct publishing Jan 2027). It also gets provenance for free.
+      #
+      # Requires a trusted publisher configured on the package at npmjs.com
+      # naming this repo AND this workflow file (ci.yml). Rename this file and
+      # publishing stops until the publisher is updated to match.
       id-token: write
     steps:
       - uses: actions/checkout@v5
@@ -39,6 +47,13 @@ jobs:
           node-version: 22
           cache: npm
           registry-url: https://registry.npmjs.org
+
+      # Node 22 ships npm 10, which predates trusted publishing — it would fall
+      # back to looking for a token and fail with EOTP. Pin forward, don't
+      # assume the runner's bundled npm is new enough.
+      - run: npm install -g npm@latest
+      - run: npm --version
+
       - run: npm ci
 
       # Publishing a version that already exists is a hard error, so every
@@ -57,11 +72,9 @@ jobs:
           fi
 
       - if: steps.check.outputs.published == 'false'
-        run: npm publish --provenance
-        env:
-          # The repo secret holding the npm automation token. Named for where
-          # it is used rather than what it is, which is how it was created.
-          NODE_AUTH_TOKEN: ${{ secrets.VELANTO_MCP_GITHUB_ACTIONS }}
+        # No NODE_AUTH_TOKEN: authentication is the OIDC exchange, and
+        # provenance is automatic under trusted publishing.
+        run: npm publish
 
       # A tag per published version, so the registry and the git history agree
       # on what shipped. Only after a successful publish.

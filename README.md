@@ -130,10 +130,15 @@ and the CI workflow publishes that version to npm and tags the commit `vX.Y.Z`.
 A commit whose version is already on the registry publishes nothing, so ordinary
 merges are safe — a release IS the version bump.
 
-The workflow needs the `VELANTO_MCP_GITHUB_ACTIONS` repository secret, holding
-an npm token with write access to this package (a granular or **automation**
-token — both bypass 2FA). Tarballs carry npm provenance, tying each release
-back to the workflow run and commit that built it.
+There is **no npm token**. Publishing uses npm's trusted publishing: the
+workflow presents a short-lived OIDC token from GitHub and npm exchanges it for
+publish rights, so nothing long-lived is stored on the repo. It also means
+tarballs carry provenance automatically, tying each release back to the workflow
+run and commit that built it.
+
+This requires a trusted publisher configured on the package at npmjs.com, naming
+this repository **and** the workflow file `ci.yml`. Renaming that file stops
+publishing until the publisher is updated to match.
 
 ## License
 
