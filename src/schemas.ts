@@ -54,6 +54,12 @@ export const PACK_TAGS = [
   "Memes",
 ] as const;
 
+/** Report lifecycle, mirrored from the backend REPORT_STATUSES. */
+export const REPORT_STATUSES = ["new", "reviewing", "closed"] as const;
+
+/** What a report is filed against, mirrored from the backend REPORT_TYPES. */
+export const REPORT_TYPES = ["pack", "user", "round"] as const;
+
 /** A pack's moderation status, mirrored from the backend PACK_MODERATION_STATUSES. */
 export const PACK_MODERATION_STATUSES = [
   "draft",

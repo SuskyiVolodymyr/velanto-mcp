@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { ApiClient } from "../api-client.js";
 import { handle, queryString } from "./helpers.js";
+import { REPORT_STATUSES, REPORT_TYPES } from "../schemas.js";
 
 /**
  * Moderation tools. All require the `moderation` scope AND a staff role on the
@@ -27,7 +28,9 @@ export function registerModerationTools(
     },
     ({ page, limit, format, q }) =>
       handle(() =>
-        api.get(`/packs/moderation-queue${queryString({ page, limit, format, q })}`),
+        api.get(
+          `/packs/moderation-queue${queryString({ page, limit, format, q })}`,
+        ),
       ),
   );
 
@@ -69,14 +72,21 @@ export function registerModerationTools(
       inputSchema: {
         page: z.number().int().positive().optional(),
         limit: z.number().int().positive().max(50).optional(),
+        // Enums, not free strings: these were documented as "e.g. 'open'"
+        // and "e.g. 'pack'", and no report has ever had status 'open' — an
+        // agent following that filtered on a value the API doesn't know.
+        // Mirrors velanto-backend REPORT_STATUSES / REPORT_TYPES.
         status: z
-          .string()
+          .enum(REPORT_STATUSES)
           .optional()
-          .describe("Filter by report status (e.g. 'open')."),
+          .describe(
+            "Filter by report status. 'new' is unreviewed, 'reviewing' is " +
+              "acknowledged, 'closed' is resolved.",
+          ),
         type: z
-          .string()
+          .enum(REPORT_TYPES)
           .optional()
-          .describe("Filter by report type (e.g. 'pack')."),
+          .describe("Filter by what was reported."),
       },
     },
     ({ page, limit, status, type }) =>
@@ -90,7 +100,7 @@ export function registerModerationTools(
     {
       title: "Resolve a report",
       description:
-        "Mark a report as reviewed (acknowledged) or closed (resolved). Requires the moderation scope and a staff account.",
+        "Move a report to 'reviewing' (acknowledged) or 'closed' (resolved). Requires the moderation scope and a staff account.",
       inputSchema: {
         id: z.string().describe("The report id."),
         action: z
@@ -99,8 +109,6 @@ export function registerModerationTools(
       },
     },
     ({ id, action }) =>
-      handle(() =>
-        api.post(`/reports/${encodeURIComponent(id)}/${action}`),
-      ),
+      handle(() => api.post(`/reports/${encodeURIComponent(id)}/${action}`)),
   );
 }

@@ -1,6 +1,11 @@
 import { describe, it, expect } from "vitest";
 import { z } from "zod";
-import { createPackShape, updatePackShape } from "../src/schemas.js";
+import {
+  createPackShape,
+  updatePackShape,
+  REPORT_STATUSES,
+  REPORT_TYPES,
+} from "../src/schemas.js";
 
 const createPack = z.object(createPackShape);
 const updatePack = z.object(updatePackShape);
@@ -199,5 +204,23 @@ describe("slot pool mode", () => {
 
   it("still accepts the historic shape, with groupMode absent", () => {
     expect(createPack.safeParse(VERSUS_PACK).success).toBe(true);
+  });
+});
+
+/**
+ * The moderation filters were free strings documented with an example status
+ * of 'open' — a value the backend has never had (REPORT_STATUSES is new /
+ * reviewing / closed). An agent that believed the description filtered on
+ * nothing. Typed here so the mirror can't drift silently again.
+ */
+describe("report filters", () => {
+  it("mirrors the backend's report statuses exactly", () => {
+    expect([...REPORT_STATUSES]).toEqual(["new", "reviewing", "closed"]);
+    // 'open' is what the tool used to document. It has never been a status.
+    expect(REPORT_STATUSES).not.toContain("open");
+  });
+
+  it("mirrors the backend's report types exactly", () => {
+    expect([...REPORT_TYPES]).toEqual(["pack", "user", "round"]);
   });
 });
