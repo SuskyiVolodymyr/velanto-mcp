@@ -1,7 +1,7 @@
 {
   "name": "velanto-mcp",
-  "version": "0.3.0",
-  "description": "Model Context Protocol server for the Velanto API — create, edit, and moderate elimination-quiz packs from an AI assistant using a Personal Access Token.",
+  "version": "0.4.0",
+  "description": "Model Context Protocol server for the Velanto API \u2014 create, edit, and moderate elimination-quiz packs from an AI assistant using a Personal Access Token.",
   "keywords": [
     "mcp",
     "model-context-protocol",

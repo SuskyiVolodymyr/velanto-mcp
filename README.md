@@ -99,6 +99,18 @@ group (a single-pool matchup, where each side draws different items from the one
 pool and items never repeat, so the pool size caps how many rounds it can feed).
 Different rounds may use different pairs, in any order.
 
+A slot can also leave its pool to chance. Set `groupMode: "random"` and omit
+`groupId`, and the pool is drawn when someone plays — one no other random slot
+in the pack took, and one no slot names explicitly. That is how a pack pairs its
+pools differently for every player rather than running the same matchups every
+time: 26 band pools across 13 `nxn` rounds of two random sides gives each player
+a different set of 13 matchups, every band appearing once.
+
+Random pools are **consumed**, so a pack holds at most
+`pools − distinct named pools` random slots and the API rejects more. A
+random-pool slot must use `mode: "random"` — pinning item ids needs a known
+pool.
+
 > The API validates every request and returns a clear error the assistant can
 > act on.
 

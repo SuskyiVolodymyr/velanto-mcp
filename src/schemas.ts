@@ -12,6 +12,11 @@ import { z } from "zod";
  * pools against each other. Those rules can't be expressed in the raw shape MCP
  * registers tools with, so they live in the field descriptions, and the backend
  * enforces them for real (see its `create-pack.dto.ts`).
+ *
+ * The one cross-slot rule worth knowing before building a pack: a slot with
+ * `groupMode: "random"` is handed a pool at play time and CONSUMES it, so no
+ * other random slot can be given the same one. A pack therefore holds at most
+ * (pools − distinct named pools) random slots, and the API rejects more.
  */
 
 /** Category tags a pack can carry, mirrored from the backend PACK_TAGS. */
@@ -48,6 +53,12 @@ export const PACK_TAGS = [
   "K-pop",
   "Memes",
 ] as const;
+
+/** Report lifecycle, mirrored from the backend REPORT_STATUSES. */
+export const REPORT_STATUSES = ["new", "reviewing", "closed"] as const;
+
+/** What a report is filed against, mirrored from the backend REPORT_TYPES. */
+export const REPORT_TYPES = ["pack", "user", "round"] as const;
 
 /** A pack's moderation status, mirrored from the backend PACK_MODERATION_STATUSES. */
 export const PACK_MODERATION_STATUSES = [
@@ -87,22 +98,61 @@ export const groupSchema = z.object({
   items: z.array(itemSchema).min(1),
 });
 
-// A slot draws from one group: 'random' draws `count` items; 'manual' shows the
-// explicit ordered `itemIds`.
-export const slotSchema = z.object({
-  groupId: z.string().min(1).describe("Id of the group this slot draws from."),
-  mode: z.enum(["random", "manual"]),
-  count: z
-    .number()
-    .int()
-    .positive()
-    .optional()
-    .describe("How many items to draw — required when mode is 'random'."),
-  itemIds: z
-    .array(z.string().min(1))
-    .optional()
-    .describe("Explicit item ids to show — required when mode is 'manual'."),
-});
+// A slot has two independent choices: which POOL it draws from (groupId, or
+// groupMode 'random' to be handed one at play time) and which ITEMS it takes
+// from that pool (mode 'random' with a count, or 'manual' with explicit ids).
+export const slotSchema = z
+  .object({
+    groupId: z
+      .string()
+      .min(1)
+      .optional()
+      .describe(
+        "Id of the group this slot draws from. Required unless groupMode is " +
+          "'random', in which case it must be omitted.",
+      ),
+    groupMode: z
+      .enum(["fixed", "random"])
+      .optional()
+      .describe(
+        "How the slot gets its POOL, as opposed to `mode` below, which is how " +
+          "it gets its items. Omit (or 'fixed') to name a pool via groupId — " +
+          "the same pool may back any number of rounds. 'random' omits " +
+          "groupId and the pool is drawn when someone plays: one no other " +
+          "random slot in the pack took, and one no slot names explicitly. " +
+          "That makes a pack whose matchups differ for every player — e.g. 26 " +
+          "band pools across 13 nxn rounds pairs them differently each play. " +
+          "Random pools are CONSUMED, so a pack can hold at most " +
+          "(pools - distinct named pools) random slots and the API rejects " +
+          "more. A random-pool slot cannot use mode 'manual': pinning item " +
+          "ids needs a known pool.",
+      ),
+    mode: z.enum(["random", "manual"]),
+    count: z
+      .number()
+      .int()
+      .positive()
+      .optional()
+      .describe("How many items to draw — required when mode is 'random'."),
+    itemIds: z
+      .array(z.string().min(1))
+      .optional()
+      .describe("Explicit item ids to show — required when mode is 'manual'."),
+  })
+  .refine(
+    (slot) =>
+      slot.groupMode === "random" ? !slot.groupId : Boolean(slot.groupId),
+    {
+      message:
+        "Name a pool with groupId, or set groupMode to 'random' and omit it — not both, not neither.",
+      path: ["groupId"],
+    },
+  )
+  .refine((slot) => !(slot.groupMode === "random" && slot.mode === "manual"), {
+    message:
+      "A random-pool slot cannot pin items: an item id only means something inside a known pool.",
+    path: ["mode"],
+  });
 
 export const roundSchema = z.object({
   id: z.string().min(1),
@@ -130,7 +180,10 @@ const formatSchema = z
       "repeat, so the pool size caps how many rounds it can feed: 12 items at " +
       "3 per side allow at most two rounds). Each round is its own independent " +
       "matchup — different rounds may pit different pairs, in any order (e.g. " +
-      "round 1 boys vs girls, round 2 heroes vs villains). " +
+      "round 1 boys vs girls, round 2 heroes vs villains). A side may also " +
+      "leave its pool to chance with groupMode 'random' — see the slot's own " +
+      "description; that is how a pack pairs its pools differently for every " +
+      "player instead of running the same matchups every time. " +
       "nxn draws 1-8 items per side; 1v1 must draw exactly 1 per side.",
   );
 
