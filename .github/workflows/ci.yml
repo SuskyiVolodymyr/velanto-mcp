@@ -59,7 +59,9 @@ jobs:
       - if: steps.check.outputs.published == 'false'
         run: npm publish --provenance
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          # The repo secret holding the npm automation token. Named for where
+          # it is used rather than what it is, which is how it was created.
+          NODE_AUTH_TOKEN: ${{ secrets.VELANTO_MCP_GITHUB_ACTIONS }}
 
       # A tag per published version, so the registry and the git history agree
       # on what shipped. Only after a successful publish.
