@@ -6,7 +6,7 @@ import { z } from "zod";
  * server relays any rejection, but keeping these faithful means the AI builds
  * valid packs first time.
  *
- * All five formats share one shape — pools (`groups`) plus `rounds` of `slots`.
+ * All six formats share one shape — pools (`groups`) plus `rounds` of `slots`.
  * They differ only in the per-round slot rules, described on `format` below:
  * elimination formats draw a single slot per round, versus formats pit two
  * pools against each other. Those rules can't be expressed in the raw shape MCP
@@ -133,7 +133,11 @@ export const slotSchema = z
       .int()
       .positive()
       .optional()
-      .describe("How many items to draw — required when mode is 'random'."),
+      .describe(
+        "How many items to draw — required when mode is 'random', EXCEPT in " +
+          "save_one_friends, which rejects a count because the room draws one " +
+          "item per player plus one.",
+      ),
     itemIds: z
       .array(z.string().min(1))
       .optional()
@@ -162,17 +166,39 @@ export const roundSchema = z.object({
     .min(1)
     .describe(
       "Elimination formats (save_one, sacrifice_one, rank_blind): exactly 1 " +
-        "slot. Versus formats (nxn, 1v1): exactly 2 slots — one per side.",
+        "slot. Versus formats (nxn, 1v1): exactly 2 slots — one per side. " +
+        "save_one_friends: exactly 1 slot, mode 'random', and NO count — the " +
+        "room draws one item per player plus one, so the size isn't known " +
+        "until the room fills and an authored count is rejected. Every pool it " +
+        "uses needs at least 5 items, and enough left over that each round " +
+        "sharing that pool can still draw 5: items never repeat across those " +
+        "rounds, so 12 items cannot back 3 rounds.",
     ),
 });
 
 /** The format enum, shared by create and update so they can't drift apart. */
 const formatSchema = z
-  .enum(["save_one", "sacrifice_one", "rank_blind", "nxn", "1v1"])
+  .enum([
+    "save_one",
+    "sacrifice_one",
+    "rank_blind",
+    "save_one_friends",
+    "nxn",
+    "1v1",
+  ])
   .describe(
     "How the pack plays, which fixes the shape of every round. " +
       "save_one / sacrifice_one / rank_blind: each round has exactly 1 slot " +
       "drawing 2-8 items. " +
+      "save_one_friends: save_one played by 2-4 friends in a room, live. Each " +
+      "round has exactly 1 slot which must use mode 'random' and must NOT set " +
+      "a count — the room shows (players + 1) items, every player claims one " +
+      "to sacrifice, claims are mutually exclusive, and the single unclaimed " +
+      "item survives. Because the count is fixed at play time, every pool a " +
+      "round uses needs at least 5 items (the 4-player maximum), plus enough " +
+      "left over for each further round on that pool to draw 5 too — items " +
+      "never repeat across rounds sharing a pool, so 12 items cannot back 3 " +
+      "rounds. " +
       "nxn / 1v1: each round has exactly 2 slots, one per side, and both must " +
       "use mode 'random'. The two slots may reference two DIFFERENT groups " +
       "(a classic A-vs-B matchup) OR the SAME group (a single-pool matchup — " +

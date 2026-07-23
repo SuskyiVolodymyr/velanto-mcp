@@ -64,6 +64,7 @@ describe("createPackShape.format", () => {
       "save_one",
       "sacrifice_one",
       "rank_blind",
+      "save_one_friends",
       "nxn",
       "1v1",
     ]) {
@@ -137,6 +138,7 @@ describe("updatePackShape.format", () => {
       "save_one",
       "sacrifice_one",
       "rank_blind",
+      "save_one_friends",
       "nxn",
       "1v1",
     ]) {
