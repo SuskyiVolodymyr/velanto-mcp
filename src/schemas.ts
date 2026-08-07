@@ -65,6 +65,11 @@ export const PACK_MODERATION_STATUSES = [
   "draft",
   "pending",
   "approved",
+  // A moderator asked the author for changes rather than rejecting outright.
+  // The pack is back with its author, editable, and re-enters the queue on
+  // save. Missing here until 0.6.0, so a caller could neither filter for it
+  // nor make sense of it coming back on a pack.
+  "changes_requested",
   "rejected",
 ] as const;
 
@@ -134,9 +139,7 @@ export const slotSchema = z
       .positive()
       .optional()
       .describe(
-        "How many items to draw — required when mode is 'random', EXCEPT in " +
-          "save_one_friends, which rejects a count because the room draws one " +
-          "item per player plus one.",
+        "How many items to draw — required when mode is 'random'.",
       ),
     itemIds: z
       .array(z.string().min(1))
@@ -166,39 +169,34 @@ export const roundSchema = z.object({
     .min(1)
     .describe(
       "Elimination formats (save_one, sacrifice_one, rank_blind): exactly 1 " +
-        "slot. Versus formats (nxn, 1v1): exactly 2 slots — one per side. " +
-        "save_one_friends: exactly 1 slot, mode 'random', and NO count — the " +
-        "room draws one item per player plus one, so the size isn't known " +
-        "until the room fills and an authored count is rejected. Every pool it " +
-        "uses needs at least 5 items, and enough left over that each round " +
-        "sharing that pool can still draw 5: items never repeat across those " +
-        "rounds, so 12 items cannot back 3 rounds.",
+        "slot. Versus formats (nxn, 1v1): exactly 2 slots — one per side.",
     ),
 });
 
+/**
+ * The pack formats, mirrored from the backend SUPPORTED_FORMATS.
+ *
+ * Exported so `cross-repo-drift.test.ts` can pin it. There is no sixth format:
+ * `save_one_friends` was retired in the multiplayer redesign
+ * (velanto-backend#276) — its live-claim play became the "Claim" MODE in the
+ * universal room model, so it is a way of PLAYING a pack, not a way of
+ * authoring one. Every format below can be played solo or in a room.
+ */
+export const PACK_FORMATS = [
+  "save_one",
+  "sacrifice_one",
+  "nxn",
+  "rank_blind",
+  "1v1",
+] as const;
+
 /** The format enum, shared by create and update so they can't drift apart. */
 const formatSchema = z
-  .enum([
-    "save_one",
-    "sacrifice_one",
-    "rank_blind",
-    "save_one_friends",
-    "nxn",
-    "1v1",
-  ])
+  .enum(PACK_FORMATS)
   .describe(
     "How the pack plays, which fixes the shape of every round. " +
       "save_one / sacrifice_one / rank_blind: each round has exactly 1 slot " +
       "drawing 2-8 items. " +
-      "save_one_friends: save_one played by 2-4 friends in a room, live. Each " +
-      "round has exactly 1 slot which must use mode 'random' and must NOT set " +
-      "a count — the room shows (players + 1) items, every player claims one " +
-      "to sacrifice, claims are mutually exclusive, and the single unclaimed " +
-      "item survives. Because the count is fixed at play time, every pool a " +
-      "round uses needs at least 5 items (the 4-player maximum), plus enough " +
-      "left over for each further round on that pool to draw 5 too — items " +
-      "never repeat across rounds sharing a pool, so 12 items cannot back 3 " +
-      "rounds. " +
       "nxn / 1v1: each round has exactly 2 slots, one per side, and both must " +
       "use mode 'random'. The two slots may reference two DIFFERENT groups " +
       "(a classic A-vs-B matchup) OR the SAME group (a single-pool matchup — " +

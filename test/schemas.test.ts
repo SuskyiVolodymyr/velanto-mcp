@@ -3,6 +3,7 @@ import { z } from "zod";
 import {
   createPackShape,
   updatePackShape,
+  PACK_FORMATS,
   REPORT_STATUSES,
   REPORT_TYPES,
 } from "../src/schemas.js";
@@ -60,14 +61,10 @@ describe("createPackShape.draft", () => {
 
 describe("createPackShape.format", () => {
   it("accepts every format the backend supports", () => {
-    for (const format of [
-      "save_one",
-      "sacrifice_one",
-      "rank_blind",
-      "save_one_friends",
-      "nxn",
-      "1v1",
-    ]) {
+    // Driven off PACK_FORMATS rather than a second hand-written list, which
+    // is how this one kept asserting `save_one_friends` long after the format
+    // was retired. cross-repo-drift.test.ts pins PACK_FORMATS itself.
+    for (const format of PACK_FORMATS) {
       const result = createPack.safeParse({ ...VERSUS_PACK, format });
       expect(result.success, `${format} should be accepted`).toBe(true);
     }
@@ -134,14 +131,10 @@ describe("versus packs", () => {
 
 describe("updatePackShape.format", () => {
   it("accepts every supported format, and stays optional", () => {
-    for (const format of [
-      "save_one",
-      "sacrifice_one",
-      "rank_blind",
-      "save_one_friends",
-      "nxn",
-      "1v1",
-    ]) {
+    // Driven off PACK_FORMATS rather than a second hand-written list, which
+    // is how this one kept asserting `save_one_friends` long after the format
+    // was retired. cross-repo-drift.test.ts pins PACK_FORMATS itself.
+    for (const format of PACK_FORMATS) {
       expect(updatePack.safeParse({ id: "p1", format }).success).toBe(true);
     }
     expect(updatePack.safeParse({ id: "p1" }).success).toBe(true);

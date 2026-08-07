@@ -67,7 +67,7 @@ has the necessary role. Grant the least you need:
 
 - `get_pack` — fetch a pack by id (including your own pending packs).
 - `list_my_packs` — list the packs you authored, all statuses (optionally
-  filtered to one: draft, pending, approved, rejected).
+  filtered to one: draft, pending, approved, changes_requested, rejected).
 - `create_pack` — create a new pack (enters moderation before going public, or
   `draft: true` to save it privately without submitting for review).
 - `update_pack` — edit one of your packs (re-enters moderation; `draft: true`
@@ -90,7 +90,6 @@ All six formats are supported. Every pack is pools (`groups`) plus `rounds` of
 | Format                                    | Round shape                                                                                               |
 | ----------------------------------------- | --------------------------------------------------------------------------------------------------------- |
 | `save_one`, `sacrifice_one`, `rank_blind` | Exactly 1 slot, drawing 2–8 items.                                                                        |
-| `save_one_friends`                        | Exactly 1 slot, `random`, no `count` — the room draws players+1 items; each pool needs 5 items per round. |
 | `nxn`                                     | Exactly 2 slots (one per side), both `random`, 1–8 items per side.                                        |
 | `1v1`                                     | Exactly 2 slots, both `random`, exactly 1 item per side.                                                  |
 
