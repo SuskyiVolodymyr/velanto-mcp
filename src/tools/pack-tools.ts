@@ -64,7 +64,7 @@ export function registerPackTools(server: McpServer, api: ApiClient): void {
     {
       title: "Create a pack",
       description:
-        "Create a new elimination-quiz pack. It enters moderation before becoming public (unless your account is staff/trusted), or pass draft:true to save it privately without submitting for review. Requires packs:write.",
+        "Create a new elimination-quiz pack. It enters moderation before becoming public (unless your account is staff/trusted), or pass draft:true to save it privately without submitting for review. Answers with {id, title, status} — not the pack, which you just sent; `status` tells you whether it went straight public ('approved') or into the queue ('pending'/'draft'). Use get_pack with the returned id to read it back. Requires packs:write.",
       inputSchema: createPackShape,
     },
     (input) => handle(() => api.post("/packs", input)),
@@ -75,7 +75,7 @@ export function registerPackTools(server: McpServer, api: ApiClient): void {
     {
       title: "Update a pack",
       description:
-        "Update one of your own packs. Send the pack id plus ONLY the fields you want to change — anything you omit keeps its current value, so renaming a pack does not mean re-sending its pools, rounds and items. The result is validated as a whole, so a change that breaks the pack is rejected even when the fields you sent look fine on their own (e.g. replacing the pools out from under rounds that referenced them). Editing re-enters moderation; pass draft:true to unpublish it back to a private draft, or draft:false to publish a draft. Omitting draft leaves the published/draft state as it is. Requires packs:write.",
+        "Update one of your own packs. Send the pack id plus ONLY the fields you want to change — anything you omit keeps its current value, so renaming a pack does not mean re-sending its pools, rounds and items. The result is validated as a whole, so a change that breaks the pack is rejected even when the fields you sent look fine on their own (e.g. replacing the pools out from under rounds that referenced them). Editing re-enters moderation; pass draft:true to unpublish it back to a private draft, or draft:false to publish a draft. Omitting draft leaves the published/draft state as it is. Answers with {id, title, status} rather than the edited pack — `status` is what the edit changed that you cannot predict, since re-entering moderation may move an approved pack back to 'pending'. Use get_pack to read the result back. Requires packs:write.",
       inputSchema: updatePackShape,
     },
     ({ id, ...patch }) =>
